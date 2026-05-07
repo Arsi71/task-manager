@@ -4,33 +4,29 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPass, setShowPass] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || "Login failed"); setLoading(false); return; }
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("name", data.name);
-      router.push("/dashboard");
-    } catch {
-      setError("Something went wrong");
-    }
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    const data = await res.json();
     setLoading(false);
+    if (!res.ok) { setError(data.error || "Registration failed"); return; }
+    router.push("/");
   };
 
   return (
@@ -46,25 +42,36 @@ export default function LoginPage() {
 
       {/* Card */}
       <div className="bg-white rounded-xl shadow-lg w-full max-w-sm p-8">
-        <h1 className="text-[#172b4d] text-xl font-semibold text-center mb-6">Log in to TaskFlow</h1>
+        <h1 className="text-[#172b4d] text-xl font-semibold text-center mb-2">Sign up for your account</h1>
+        <p className="text-[#5e6c84] text-sm text-center mb-6">No credit card required.</p>
 
-        <form onSubmit={handleLogin} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <input
+            name="name"
+            type="text"
+            placeholder="Enter your name"
+            className="trello-input"
+            value={form.name}
+            onChange={handleChange}
+            required
+          />
+          <input
+            name="email"
             type="email"
             placeholder="Enter your email"
             className="trello-input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={form.email}
+            onChange={handleChange}
             required
           />
-
           <div className="relative">
             <input
+              name="password"
               type={showPass ? "text" : "password"}
-              placeholder="Enter your password"
+              placeholder="Create a password"
               className="trello-input pr-10"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={form.password}
+              onChange={handleChange}
               required
             />
             <button
@@ -91,9 +98,9 @@ export default function LoginPage() {
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                Logging in...
+                Creating account...
               </span>
-            ) : "Log in"}
+            ) : "Sign up"}
           </button>
         </form>
 
@@ -103,15 +110,15 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-sm text-[#5e6c84]">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-[#0079bf] hover:underline font-medium">
-            Sign up for TaskFlow
+          Already have an account?{" "}
+          <Link href="/" className="text-[#0079bf] hover:underline font-medium">
+            Log in
           </Link>
         </p>
       </div>
 
-      <p className="text-white/60 text-xs mt-6 text-center">
-        By logging in, you agree to our Terms of Service and Privacy Policy.
+      <p className="text-white/60 text-xs mt-6 text-center max-w-sm">
+        By signing up, you confirm that you&apos;ve read and accepted our Terms of Service and Privacy Policy.
       </p>
     </div>
   );
